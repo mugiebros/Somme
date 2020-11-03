@@ -14,18 +14,26 @@ def main() -> None:
     try:
         finale = []
         liste = glob.glob("*.*")
-        for i in sys.argv:
+        lol = sys.argv.copy()
+        for i in lol:
             if i == "pydir":
-                sys.argv.remove(i)
+                lol.remove(i)
                 break
             else:
-                sys.argv.remove(i)
+                lol.remove(i)
         liste.sort()
-        if len(sys.argv) == 0:
+        if len(lol) == 0:
             finale = liste
 
         else:
-            finale = intersection(sys.argv, liste)
+            premier = False
+            for i in sys.argv:
+                if premier:
+                    finale.extend(glob.glob(i))
+                else:
+                    premier = True
+            finale.sort()
+            finale = list(dict.fromkeys(finale))
 
         for i in finale:
             print(i)
