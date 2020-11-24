@@ -9,12 +9,15 @@ import sys
 import colorama
 from colorama import Fore
 import re
+import math
 colorama.init()
-GLOBALS = {}
+GLOBALS = {"__builtins__":{} ,**math.__dict__,"abs":abs,"min":min,"max":max,"sum":sum}
+LOCALS = {}
 def main() -> None:
     """
         programme principale
     """
+    patternpointFin = re.compile("^[A-Za-z0-9_-]*[.]$")
     if len(sys.argv[1:]) != 1:
         print(Fore.YELLOW + "[AB] " + Fore.RED + f"Le code s'attend a recevoir 1 argument, mais vous en avez fourni {len(sys.argv[1:])}",
               file=sys.stderr)
@@ -29,7 +32,7 @@ def main() -> None:
     if pattern.match(sys.argv[1]):
         print(Fore.YELLOW + "[AB] " + Fore.WHITE + "Affichage de l'aide pour: " + Fore.MAGENTA + f"{sys.argv[1]}" + Fore.GREEN,file=sys.stderr)
         try:
-            exec(f""+sys.argv[1]+"()",GLOBALS)
+            exec(f""+sys.argv[1]+"()",GLOBALS,LOCALS)
         except Exception as exep:
             if exep.__str__() == f"name '{sys.argv[1]}' is not defined":
                 print(Fore.YELLOW + "[AB] " + Fore.RED + f"{exep}")
