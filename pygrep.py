@@ -9,9 +9,10 @@ austin brodeur
 
 import re
 import sys
+import colorama
 
 from colorama import Fore
-
+colorama.init()
 
 def main() -> None:
     """
@@ -20,8 +21,8 @@ def main() -> None:
     if sys.stdin.isatty():
         print("Aucune redirection d'entrée à traiter")
         return
-    if len(sys.argv) > 1:
-        print(Fore.RED + f"Le code s'attend a recevoir 1 argument, mais vous en avez fourni {len(sys.argv)}",
+    if len(sys.argv[1:]) > 1:
+        print(Fore.RED + f"Le code s'attend a recevoir 1 argument, mais vous en avez fourni {len(sys.argv[1:])}",
               file=sys.stderr)
         print(Fore.YELLOW + "Usage: ./pygrep.py pattern" + Fore.WHITE, file=sys.stderr)
         sys.exit(1)
@@ -30,10 +31,11 @@ def main() -> None:
     try:
         regexp = re.compile(sys.argv[1])
     except:
-        print(Fore.RED + f"Le code s'attend a recevoir 1 argument, mais vous en avez fourni {len(sys.argv)}",
+        print(Fore.RED + f"Le code s'attend a recevoir 1 argument, mais vous en avez fourni {len(sys.argv[1:])}",
               file=sys.stderr)
         print(Fore.YELLOW + "Usage: ./pygrep.py pattern" + Fore.WHITE, file=sys.stderr)
         sys.exit(1)
+
     for ligne in lignes:
         if regexp.search(ligne):
             print(ligne, end=" ")
