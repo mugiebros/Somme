@@ -13,6 +13,8 @@ import pprint
 from datetime import datetime
 import sys
 import whoami
+from tabulate import tabulate
+tabulate.PRESERVE_WHITESPACE = True
 import re
 import argparse
 import os
@@ -23,52 +25,69 @@ def parse_arg() -> argparse.Namespace:
     :return:
     """
     parser = argparse.ArgumentParser(description="Commande pour journaliser un message -- 2020, par Austin Brodeur")
-    parser.add_argument('message', help='Message à journaliser', nargs='+',default="")
+    parser.add_argument('message', help='Message à journaliser', nargs='?',default="")
+    parser.add_argument("-l","--list",help="Afficher les logs",action="store_true")
     parser.add_argument('-t',choices=["n","a","e"],help="Type de log",default="")
     parser.add_argument('--type',choices=["notification","avertissement","erreur"],help="Type de log",default="notification")
-    parser.add_argument('-u','--user',metavar='USER',help="Nom de l'utilisateur",default=os.getlogin())
+    parser.add_argument('-u','--user',metavar='USER',help="Nom de l'utilisateur",default="mugiebros")
 
     args = parser.parse_args()
     return args
 
 def main() -> None:
+
     datalog = ['dateheure', 'logtype', 'message', 'utilisateur']
     loghoy = ""
     data = ""
     if len(sys.argv[1:]) > 0:
-        if re.match(r"^['A-Za-z0-9 _-]*['A-Za-z0-9_-]['A-Za-z0-9 _-]*$",parse_arg().user):
-            now = datetime.today()
-            if parse_arg().t == "":
-                data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': parse_arg().type,
-                        'message': " ".join(parse_arg().message),
-                        'utilisateur': parse_arg().user}
-            else:
-                if parse_arg().t == "n":
-                    loghoy = "notification"
-                    data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': "notification",
-                            'message': " ".join(parse_arg().message),
-                            'utilisateur': parse_arg().user}
-                elif parse_arg().t == "a":
-                    loghoy = "avertissement"
-                    data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': "avertissement",
-                            'message': " ".join(parse_arg().message),
-                            'utilisateur': parse_arg().user}
-                elif parse_arg().t == "e":
-                    loghoy = "erreur"
-                    data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': "erreur",
-                            'message': " ".join(parse_arg().message),
-                            'utilisateur': parse_arg().user}
-            pprint.pprint(data)
-            try:
-                with open('pylog.tsv', 'a', newline='') as tsvfile:
-                    writer = csv.DictWriter(tsvfile, fieldnames=datalog,delimiter='\t')
-                    if os.path.getsize('pylog.tsv') == 0:
-                        writer.writeheader()
-                    writer.writerow({'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': loghoy, 'message': " ".join(parse_arg().message), 'utilisateur': parse_arg().user})
-            except Exception as exp:
-                print(Fore.YELLOW + "[AB] " + Fore.RED + f"PermissionError " + Fore.YELLOW + f"{exp}")
+        if parse_arg().list == True and parse_arg().message != "":
+            print(
+                "usage: pylog.py [-h] [-l] [-t {n,a,e}] [--type {notification,avertissement,erreur}] [-u USER] [message]")
+            print(
+                Fore.YELLOW + "[AB] " + Fore.RED + "ArgumentError:" + Fore.YELLOW + "Il faut spécifier un et un seul argument parmi: -l, message")
+        elif parse_arg().list == True and parse_arg().message == "":
+            tsv_file = open('pylog.tsv')
+            read_tsv = csv.DictReader(tsv_file,fieldnames=datalog,delimiter='\t')
+            print(tabulate(read_tsv,headers="firstrow"))
+        elif parse_arg().message == "":
+            print(
+                "usage: pylog.py [-h] [-l] [-t {n,a,e}] [--type {notification,avertissement,erreur}] [-u USER] [message]")
+            print(Fore.YELLOW + "[AB] " + Fore.RED + "ArgumentError:" + Fore.YELLOW + "Il faut spécifier un et un seul argument parmi: -l, message")
         else:
-            print(Fore.YELLOW + "[AB] " + Fore.RED +"ValueError"+Fore.WHITE+ "Lettres, chiffres, tirests, espaces, et apostrophes seulement dans le nom svp")
+            if re.match(r"^['.A-Za-z0-9 _-]*['.A-Za-z0-9_-]['.A-Za-z0-9 _-]*$",parse_arg().user):
+                now = datetime.today()
+                if parse_arg().t == "":
+                    loghoy = parse_arg().type
+                    data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': parse_arg().type,
+                            'message': "".join(parse_arg().message),
+                            'utilisateur': parse_arg().user}
+                else:
+                    if parse_arg().t == "n":
+                        loghoy = "notification"
+                        data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': "notification",
+                                'message': "".join(parse_arg().message),
+                                'utilisateur': parse_arg().user}
+                    elif parse_arg().t == "a":
+                        loghoy = "avertissement"
+                        data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': "avertissement",
+                                'message': "".join(parse_arg().message),
+                                'utilisateur': parse_arg().user}
+                    elif parse_arg().t == "e":
+                        loghoy = "erreur"
+                        data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': "erreur",
+                                'message': "".join(parse_arg().message),
+                                'utilisateur': parse_arg().user}
+                pprint.pprint(data)
+                try:
+                    with open('pylog.tsv', 'a', newline='') as tsvfile:
+                        writer = csv.DictWriter(tsvfile, fieldnames=datalog,delimiter='\t')
+                        if os.path.getsize('pylog.tsv') == 0:
+                            writer.writeheader()
+                        writer.writerow({'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': loghoy, 'message': " ".join(parse_arg().message), 'utilisateur': parse_arg().user})
+                except Exception as exp:
+                    print(Fore.YELLOW + "[AB] " + Fore.RED + f"PermissionError " + Fore.YELLOW + f"{exp}")
+            else:
+                print(Fore.YELLOW + "[AB] " + Fore.RED +"ValueError"+Fore.WHITE+ "Lettres, chiffres, tirests, espaces, et apostrophes seulement dans le nom svp")
     else:
         print(Fore.YELLOW + "[AB] " + Fore.WHITE + "Svp, veuillez entrer votre message et facultativement son type et votre nom...")
         try:
