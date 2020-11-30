@@ -6,18 +6,21 @@ programme pour écrire un message
 par austin brodeur
 """
 import csv
-import pyinputplus as pyip
-import colorama
-from colorama import Fore
 import pprint
-from datetime import datetime
 import sys
+from datetime import datetime
+import colorama
+import pyinputplus as pyip
 import whoami
+from colorama import Fore
 from tabulate import tabulate
+import tempfile
 tabulate.PRESERVE_WHITESPACE = True
 import re
+import webbrowser
 import argparse
 import os
+new = 2
 colorama.init()
 def parse_arg() -> argparse.Namespace:
     """
@@ -26,6 +29,7 @@ def parse_arg() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(description="Commande pour journaliser un message -- 2020, par Austin Brodeur")
     parser.add_argument('message', help='Message à journaliser', nargs='?',default="")
+    parser.add_argument('-b','--browse',help="Afficher les logs dans le navigateur",action="store_true")
     parser.add_argument("-l","--list",help="Afficher les logs",action="store_true")
     parser.add_argument('-t',choices=["n","a","e"],help="Type de log",default="")
     parser.add_argument('--type',choices=["notification","avertissement","erreur"],help="Type de log",default="notification")
@@ -35,12 +39,28 @@ def parse_arg() -> argparse.Namespace:
     return args
 
 def main() -> None:
+    """
+        fonction principale
 
+    """
     datalog = ['dateheure', 'logtype', 'message', 'utilisateur']
     loghoy = ""
     data = ""
     if len(sys.argv[1:]) > 0:
-        if parse_arg().list == True and parse_arg().message != "":
+        if parse_arg().browse:
+            if os.name == "nt":
+                tsv_file = open('pylog.tsv')
+                read_tsv = csv.DictReader(tsv_file, fieldnames=datalog, delimiter='\t')
+                html = tabulate(read_tsv, headers="firstrow",tablefmt="html")
+                with tempfile.NamedTemporaryFile('w',delete=False,suffix='.html') as f:
+                    url = 'file://' + f.name
+                    f.write(html)
+                webbrowser.open(url)
+            else:
+                tsv_file = open('pylog.tsv')
+                read_tsv = csv.DictReader(tsv_file, fieldnames=datalog, delimiter='\t')
+                print(tabulate(read_tsv, headers="firstrow",tablefmt="html"))
+        elif parse_arg().list == True and parse_arg().message != "":
             print(
                 "usage: pylog.py [-h] [-l] [-t {n,a,e}] [--type {notification,avertissement,erreur}] [-u USER] [message]")
             print(
