@@ -26,7 +26,7 @@ def parse_arg() -> argparse.Namespace:
     parser.add_argument('message', help='Message à journaliser', nargs='+',default="")
     parser.add_argument('-t',choices=["n","a","e"],help="Type de log",default="")
     parser.add_argument('--type',choices=["notification","avertissement","erreur"],help="Type de log",default="notification")
-    parser.add_argument('-u','--user',metavar='USER',help="Nom de l'utilisateur",default=os.environ["USER"])
+    parser.add_argument('-u','--user',metavar='USER',help="Nom de l'utilisateur",default=os.getlogin())
 
     args = parser.parse_args()
     return args
@@ -59,11 +59,14 @@ def main() -> None:
                             'message': " ".join(parse_arg().message),
                             'utilisateur': parse_arg().user}
             pprint.pprint(data)
-            with open('pylog.tsv', 'a', newline='') as tsvfile:
-                writer = csv.DictWriter(tsvfile, fieldnames=datalog,delimiter='\t')
-                if os.path.getsize('pylog.tsv') == 0:
-                    writer.writeheader()
-                writer.writerow({'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': loghoy, 'message': " ".join(parse_arg().message), 'utilisateur': parse_arg().user})
+            try:
+                with open('pylog.tsv', 'a', newline='') as tsvfile:
+                    writer = csv.DictWriter(tsvfile, fieldnames=datalog,delimiter='\t')
+                    if os.path.getsize('pylog.tsv') == 0:
+                        writer.writeheader()
+                    writer.writerow({'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': loghoy, 'message': " ".join(parse_arg().message), 'utilisateur': parse_arg().user})
+            except Exception as exp:
+                print(Fore.YELLOW + "[AB] " + Fore.RED + f"PermissionError " + Fore.YELLOW + f"{exp}")
         else:
             print(Fore.YELLOW + "[AB] " + Fore.RED +"ValueError"+Fore.WHITE+ "Lettres, chiffres, tirests, espaces, et apostrophes seulement dans le nom svp")
     else:
@@ -82,12 +85,15 @@ def main() -> None:
         now = datetime.today()
         data = {'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': type, 'message': message, 'utilisateur': util}
         pprint.pprint(data)
-        with open('pylog.tsv', 'a', newline='') as tsvfile:
-            writer = csv.DictWriter(tsvfile, fieldnames=datalog, delimiter='\t')
-            if os.path.getsize('pylog.tsv') == 0:
-                writer.writeheader()
-            writer.writerow({'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': type,
-                             'message': message, 'utilisateur': util})
+        try:
+            with open('pylog.tsv', 'a', newline='') as tsvfile:
+                writer = csv.DictWriter(tsvfile, fieldnames=datalog, delimiter='\t')
+                if os.path.getsize('pylog.tsv') == 0:
+                    writer.writeheader()
+                writer.writerow({'dateheure': now.strftime("%Y/%m/%d %H:%M:%S"), 'logtype': type,
+                                 'message': message, 'utilisateur': util})
+        except Exception as exp :
+            print(Fore.YELLOW + "[AB] " + Fore.RED +f"PermissionError "+Fore.YELLOW+ f"{exp.__cause__}")
 
 if __name__ == '__main__':
     main()
