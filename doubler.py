@@ -14,7 +14,6 @@ from colorama import Fore, Style
 
 colorama.init()
 
-
 def main() -> None:
     """Fonction principale"""
     vérifier_usage()
