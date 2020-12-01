@@ -2,7 +2,7 @@
 
 """
 Programme pour evaluer un expression
-(version sécuritaire et modulaire)
+(version sécuritaire et timed et modulaire)
 
 2020, Austin Brodeur
 """
@@ -13,7 +13,7 @@ colorama.init()
 import sys
 from math import * # noqa
 from typing import NoReturn
-
+from timeit import default_timer as timer
 def exexit(ex: BaseException, exit_code: int = 1) -> NoReturn:
     """Rapporter une erreur et terminer le programme"""
     print(Fore.YELLOW,"[AB] ",
@@ -24,12 +24,14 @@ def exexit(ex: BaseException, exit_code: int = 1) -> NoReturn:
 
 def main() -> None:
     """Fonction Principale"""
+    début = timer()
     try:
         evaluation = eval(' '.join(sys.argv[1:]) or "None")
         print(Fore.CYAN + "Selon Austin Brodeur:",Fore.RESET,evaluation)
     except BaseException as ex:
         exexit(ex)
-
+    finally:
+        print(Fore.YELLOW + "Durée:",timer() - début, "sec")
 
 if __name__ == '__main__':
     main()
